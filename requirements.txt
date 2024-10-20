@@ -1,11 +1,13 @@
 flask==2.3.3
-torch==2.0.1
-torchvision==0.15.2
-opencv-python==4.7.0.72
+torch==2.0.1  # Or upgrade to torch==2.1.0
+torchvision==0.15.2  # Or upgrade to torchvision==0.16.0
+opencv-python==4.7.0.72  # Or upgrade to opencv-python==4.8.x
 Pillow==9.5.0
 pandas==2.0.3
-transformers==4.30.0
+transformers==4.30.0  # Or upgrade to transformers==4.34.x
 matplotlib==3.7.1
 numpy<2
-gunicorn
+gunicorn==20.1.0
 gdown==4.6.0
+# Optional: Add if needed for downloading files or using external APIs
+requests==2.31.0
