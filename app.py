@@ -24,8 +24,14 @@ transform = transforms.Compose([
 ])
 
 # Load the model
-model = load_combined_model(num_classes=23)
-model.eval()
+model = None
+def get_model():
+    global model
+    if model is None:
+        print("Loading the model...")
+        model = load_combined_model(num_classes=23)  # Lazy load the model
+        model.eval()  # Set the model to evaluation mode
+    return model
 
 @app.route('/test')
 def test():
@@ -53,6 +59,7 @@ def index():
             fps = extract_fps(video_path)
             if fps is None:
                 return "Error: Could not extract FPS from the video", 500
+            model = get_model()
 
             # To store the first frame for each label
             example_images = {}
