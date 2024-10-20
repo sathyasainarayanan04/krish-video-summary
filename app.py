@@ -5,8 +5,13 @@ from model import load_combined_model
 from torchvision import transforms
 import cv2
 from collections import defaultdict
+from celery import Celery
 
 app = Flask(__name__, template_folder='templates')  # Adjust path if needed
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'  # Update this if using a cloud service
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'  # Update this if using a cloud service
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
 
 # Path for uploaded videos and extracted frames
 UPLOAD_FOLDER = 'uploads/'
@@ -32,59 +37,42 @@ def get_model():
         model = load_combined_model(num_classes=23)  # Lazy load the model
         model.eval()  # Set the model to evaluation mode
     return model
+@celery.task
+def process_video(video_path):
+    # Extract frames from the video
+    extract_frames(video_path, FRAMES_FOLDER)
 
-@app.route('/test')
-def test():
-    return render_template('test.html')  # Ensure test.html is in the templates folder
+    # Perform frame analysis
+    predictions = {}
+    fps = extract_fps(video_path)
+    if fps is None:
+        return "Error: Could not extract FPS from the video", 500
+    model = get_model()
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        if 'video' not in request.files:
-            return redirect(request.url)
-        
-        file = request.files['video']
-        if file.filename == '':
-            return redirect(request.url)
-        
-        if file:
-            video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-            file.save(video_path)
+    # To store the first frame for each label
+    example_images = {}
 
-            # Extract frames from the video
-            extract_frames(video_path, FRAMES_FOLDER)
+    # Perform prediction on each frame
+    for frame_file in sorted(os.listdir(FRAMES_FOLDER)):
+        if frame_file.endswith('.jpg'):
+            frame_path = os.path.join(FRAMES_FOLDER, frame_file)
+            frame_index = int(os.path.splitext(frame_file)[0].split('_')[-1])
+            try:
+                predicted_label = predict_frame(model, frame_path, transform)
+                predictions[frame_index] = predicted_label
 
-            # Perform frame analysis
-            predictions = {}
-            fps = extract_fps(video_path)
-            if fps is None:
-                return "Error: Could not extract FPS from the video", 500
-            model = get_model()
+                # Save an example image for each label
+                if predicted_label not in example_images:
+                    example_images[predicted_label] = frame_path
+            except Exception as e:
+                print(f"Error processing {frame_file}: {e}")
 
-            # To store the first frame for each label
-            example_images = {}
+    # Group consecutive frames with the same predicted label
+    aggregated_results = group_consecutive_frames(predictions, fps)
 
-            # Perform prediction on each frame
-            for frame_file in sorted(os.listdir(FRAMES_FOLDER)):
-                if frame_file.endswith('.jpg'):
-                    frame_path = os.path.join(FRAMES_FOLDER, frame_file)
-                    frame_index = int(os.path.splitext(frame_file)[0].split('_')[-1])
-                    try:
-                        predicted_label = predict_frame(model, frame_path, transform)
-                        predictions[frame_index] = predicted_label
-
-                        # Save an example image for each label
-                        if predicted_label not in example_images:
-                            example_images[predicted_label] = frame_path
-                    except Exception as e:
-                        print(f"Error processing {frame_file}: {e}")
-
-            # Group consecutive frames with the same predicted label
-            aggregated_results = group_consecutive_frames(predictions, fps)
-
-            # Count label occurrences
-            label_occurrences = count_label_occurrences(predictions)
-            class_description = {
+    # Count label occurrences
+    label_occurrences = count_label_occurrences(predictions)
+    class_description = {
     "lower-gi-tract/anatomical-landmarks/cecum": "The cecum is the beginning of the large intestine and is a critical anatomical landmark in the lower gastrointestinal tract. It plays a role in absorbing fluids and salts that remain after intestinal digestion and absorption.",
     "lower-gi-tract/anatomical-landmarks/ileum": "The ileum is the final section of the small intestine, where absorption of vitamin B12 and bile salts occurs. It is a key anatomical landmark in the lower gastrointestinal tract.",
     "lower-gi-tract/anatomical-landmarks/retroflex-rectum": "Retroflex view of the rectum is an endoscopic technique used to inspect the rectum more thoroughly, especially for polyps or other abnormalities.",
@@ -110,17 +98,47 @@ def index():
     "upper-gi-tract/pathological-findings/esophagitis-b-d": "Esophagitis Grades B-D represent progressively severe inflammation and damage to the esophagus lining, often due to acid reflux, with Grade D being the most severe, involving extensive erosion."
 }
 
-            # Update image paths for rendering
-            images_with_labels = {label: os.path.basename(path) for label, path in example_images.items()}
+    # Update image paths for rendering
+    images_with_labels = {label: os.path.basename(path) for label, path in example_images.items()}
+    return aggregated_results, label_occurrences, images_with_labels
+    
+@app.route('/test')
+def test():
+    return render_template('test.html')  # Ensure test.html is in the templates folder
 
-            return render_template('results.html', predictions=aggregated_results, 
-                                   label_occurrences=label_occurrences, 
-                                   example_images=images_with_labels,
-                                   class_description= class_description
-                                   )
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        if 'video' not in request.files:
+            return redirect(request.url)
+        
+        file = request.files['video']
+        if file.filename == '':
+            return redirect(request.url)
+        
+        if file:
+            video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file.save(video_path)
+             
+            
+            task = process_video.delay(video_path)
+            return redirect(url_for('task_status', task_id=task.id))  # Redirect to a status page
 
     return render_template('index.html')
-
+@app.route('/task-status/<task_id>')
+def task_status(task_id):
+    task = process_video.AsyncResult(task_id)
+    if task.state == 'PENDING':
+        # Task is still processing
+        return "Task is processing..."
+    elif task.state != 'FAILURE':
+        # Task completed successfully
+        results = task.result
+        return render_template('results.html', predictions=results[0], 
+                               label_occurrences=results[1], 
+                               example_images=results[2])
+    else:
+        return "Task failed!"
 def extract_fps(video_path):
     video = cv2.VideoCapture(video_path)
     if not video.isOpened():
