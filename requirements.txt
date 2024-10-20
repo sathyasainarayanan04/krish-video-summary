@@ -8,3 +8,4 @@ transformers==4.30.0
 matplotlib==3.7.1
 numpy<2
 gunicorn
+gdown==4.6.0
