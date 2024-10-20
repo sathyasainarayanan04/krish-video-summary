@@ -8,7 +8,7 @@ def extract_frames(video_path, output_folder, frame_rate=1):
         print("Error: Could not open video.")
         return
 
-    fps = video.get(cv2.CAP_PROP_FPS)
+    fps = 10
     interval = int(fps / frame_rate)
 
     os.makedirs(output_folder, exist_ok=True)
