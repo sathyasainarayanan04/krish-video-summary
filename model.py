@@ -25,7 +25,7 @@ class CombinedModel(nn.Module):
 def load_combined_model(num_classes):
     gdown.download('https://drive.google.com/uc?id=1pmZf86M8ixCAvNXanKnNTjumQGSjC8NO', 'combined5.pth', quiet=False)
     model = CombinedModel(num_classes=num_classes)
-    model.load_state_dict(torch.load('C:/Users/sathya sai narayanan/Downloads/krish/combined5.pth', map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load('combined5.pth', map_location=torch.device('cpu')))
     model.eval()
     return model
 
