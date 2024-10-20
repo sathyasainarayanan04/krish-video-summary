@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+    <h1>Upload Video for Analysis</h1>
+    <form method="post" enctype="multipart/form-data" id="uploadForm">
+        <input type="file" name="video" accept="video/*">
+        <input type="submit" value="Upload">
+    </form>
+
+    <!-- Loader -->
+    <div id="loader" class="hidden">
+        <img src="{{ url_for('static', filename='spiral-css-preloader.gif') }}" alt="Loading">
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            document.getElementById('loader').classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
