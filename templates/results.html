@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='results.css') }}">
+</head>
+<body>
+    <h1>Results</h1>
+
+    <div class="section">
+        <button class="toggle-btn" onclick="toggleSection('labelOccurrences')">Label Occurrences</button>
+        <div id="labelOccurrences" class="toggle-content">
+            <ul>
+                {% for label, count in label_occurrences.items() %}
+                    <li>{{ label }}: {{ count }} occurrences</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <button class="toggle-btn" onclick="toggleSection('predictions')">Predictions</button>
+        <div id="predictions" class="toggle-content">
+            <ul>
+                {% for result in predictions %}
+                    <li>Label: {{ result.label }} - Start Time: {{ result.start_time }} - End Time: {{ result.end_time }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <button class="toggle-btn" onclick="toggleSection('exampleImages')">Example Images</button>
+        <div id="exampleImages" class="toggle-content">
+            {% for label, image_file in example_images.items() %}
+                <div class="image-section">
+                    <button class="toggle-btn" onclick="toggleImage('{{ label }}')">
+                        {{ label.split('/')[-1] | replace('-', ' ') }}
+                    </button>
+                    <div id="image-{{ label }}" class="toggle-content image-content">
+                        <strong>{{ label.split('/')[-1] | replace('-', ' ') }}</strong><br>
+                        <img src="{{ url_for('static', filename='frames/' ~ image_file) }}" alt="{{ label }}"><br>
+                        <p>{{ class_description[label] }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        function toggleSection(sectionId) {
+            var content = document.getElementById(sectionId);
+            content.style.display = content.style.display === 'none' || content.style.display === '' ? 'block' : 'none';
+        }
+
+        function toggleImage(label) {
+            var content = document.getElementById('image-' + label);
+            content.style.display = content.style.display === 'none' || content.style.display === '' ? 'block' : 'none';
+        }
+
+        // Initial hiding of sections and images
+        document.querySelectorAll('.toggle-content').forEach(function(content) {
+            content.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
