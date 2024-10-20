@@ -1,0 +1,118 @@
+/* results.css */
+
+/* General Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #e3f2fd; /* Light blue background for a fresh and clean look */
+    color: #333;
+}
+
+/* Header Styles */
+h1 {
+    text-align: center;
+    color: #0288d1; /* Blue color for the header */
+    margin-top: 20px;
+    font-size: 2.5em; /* Larger font size for emphasis */
+}
+
+/* Section Styles */
+.section {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 800px;
+    padding: 20px;
+    background-color: #ffffff; /* White background for the section */
+    border-radius: 12px;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2); /* Box shadow for a more pronounced 3D effect */
+}
+
+/* Toggle Button Styles */
+.toggle-btn {
+    background-color: #0288d1; /* Blue background */
+    color: white;
+    border: none;
+    padding: 12px;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    font-size: 18px;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* Hover and Active States for Toggle Buttons */
+.toggle-btn:hover {
+    background-color: #01579b; /* Darker blue on hover */
+    transform: scale(1.05); /* Slightly enlarge on hover */
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3); /* More pronounced shadow on hover */
+}
+
+.toggle-btn:active {
+    background-color: #003c8f; /* Even darker blue on active */
+    transform: scale(1); /* Reset scale */
+}
+
+/* Toggle Content Styles */
+.toggle-content {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 10px;
+    background-color: #ffffff; /* White background */
+    transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+/* Image Section Styles */
+.image-section {
+    margin-top: 10px;
+}
+
+/* Image Content Styles */
+.image-content {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #ffffff; /* White background */
+}
+
+/* List Styles */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    margin-bottom: 15px;
+    font-size: 18px; /* Larger font size for list items */
+}
+
+/* Image Styles */
+img {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 5px;
+    background-color: #fff;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Heading Styles */
+h2 {
+    border-bottom: 2px solid #0288d1; /* Blue border for headings */
+    padding-bottom: 5px;
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.8em; /* Larger font size for emphasis */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    img {
+        width: 100%;
+        height: auto;
+    }
+}
